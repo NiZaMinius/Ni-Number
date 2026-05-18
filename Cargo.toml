@@ -1,0 +1,42 @@
+[package]
+name = "ni-number"
+version = "0.1.0"
+edition = "2024"
+authors = ["NiZaMinius"]
+description = "High-precision computation of the Ni constant (η_ν) — quantum energy scattering constant"
+license = "MIT"
+repository = "https://github.com/NiZaMinius/ni-number"
+homepage = "https://github.com/NiZaMinius/ni-number"
+documentation = "https://docs.rs/ni-number"
+keywords = ["mathematics", "constant", "arbitrary-precision", "physics", "quantum"]
+categories = ["mathematics", "science"]
+readme = "README.md"
+exclude = ["benches/", ".github/"]
+
+[lib]
+name = "ni_number"
+path = "src/lib.rs"
+
+[dependencies]
+rug = { version = "1.24", features = ["float"] }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[example]]
+name = "basic"
+path = "examples/basic.rs"
+
+[[example]]
+name = "high_precision"
+path = "examples/high_precision.rs"
+
+[[bench]]
+name = "bench_ni"
+path = "benches/bench_ni.rs"
+harness = false
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
