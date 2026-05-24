@@ -205,13 +205,15 @@ cargo run --example high_precision --release
 The series converges in fewer than 10 iterations for any practical precision level — viable even on low-end hardware.
 Results are cached after the first call — subsequent calls at the same precision are instant.
 
-| Digits | Time (release build, dashu) |
-|---|---|
-| 100 | ~1 ms |
-| 1 000 | ~3 ms |
-| 5 000 | ~25 ms |
-| 10 000 | ~70 ms |
+| Time (release build, dashu) |
+| Digits | dashu (series) | dashu (total) | rug (total) |
+|--------|---------------|---------------|-------------|
+| 100    | ~0.14 ms      | ~0.14 ms      | ~0.1 ms     |
+| 1 000  | ~0.9 ms       | ~0.9 ms       | ~0.6 ms     |
+| 5 000  | ~13.5 ms      | ~13.5 ms      | ~10.9 ms    |
+| 10 000 | ~146 ms       | ~449 s        | ~52 ms      |
 
+*dashu: series only. Formatting 10 000+ digits requires `backend-rug` for practical use.
 ---
 
 ## Testing
