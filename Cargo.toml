@@ -1,6 +1,6 @@
 [package]
 name = "ni-number"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 authors = ["NiZaMinius"]
 description = "High-precision computation of the Ni constant (η_ν) — quantum energy scattering constant. Supports multiple backends: pure-Rust (default) and GNU MPFR via rug."
