@@ -1,10 +1,11 @@
+Новый:
 🌐 **Language:** English | [Русский](README.ru.md)
 
 ---
 
 # ni-number &nbsp;[![Crates.io](https://img.shields.io/crates/v/ni-number)](https://crates.io/crates/ni-number) [![Docs.rs](https://docs.rs/ni-number/badge.svg)](https://docs.rs/ni-number) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-High-precision computation of the **Ni constant** (η_ν) — the quantum energy scattering constant — in Rust, backed by GNU MPFR.
+High-precision computation of the **Ni constant** (η_ν) — the quantum energy scattering constant — in Rust, with multiple selectable backends.
 
 ```
 η_ν = 1.88937666040491913115597775087642096081019761538215...
@@ -86,13 +87,42 @@ where $R_{\mathrm{Planck}}$ is the Planck length, $r$ is the distance, and $d$ i
 Add to your `Cargo.toml`:
 
 ```toml
+# Default — pure Rust, works everywhere, no system dependencies
 [dependencies]
-ni-number = "0.1"
+ni-number = "0.2"
 ```
 
-### System dependencies
+### Backends
 
-`rug` links against GNU GMP and MPFR. Install them first:
+`ni-number` ships three selectable computation backends:
+
+| Feature | Backend | System deps | Precision |
+|---|---|---|---|
+| `backend-dashu` | pure Rust **(default)** | none | arbitrary |
+| `backend-rug` | GNU MPFR | GMP + MPFR | arbitrary |
+| `backend-f64` | native f64 | none | ~15 digits |
+
+**Default (pure Rust, recommended):**
+```toml
+[dependencies]
+ni-number = "0.2"
+```
+
+**Maximum performance via GNU MPFR:**
+```toml
+[dependencies]
+ni-number = { version = "0.2", default-features = false, features = ["backend-rug"] }
+```
+
+**Minimal footprint (embedded / WASM):**
+```toml
+[dependencies]
+ni-number = { version = "0.2", default-features = false, features = ["backend-f64"] }
+```
+
+### System dependencies for `backend-rug`
+
+Only needed if you explicitly enable `features = ["backend-rug"]`.
 
 **Ubuntu / Debian**
 ```bash
@@ -104,7 +134,7 @@ sudo apt-get install libgmp-dev libmpfr-dev libmpc-dev
 brew install gmp mpfr libmpc
 ```
 
-**Windows (Git Bash + MSYS2)**
+**Windows (MSYS2)**
 
 1. Install [MSYS2](https://www.msys2.org)
 2. In the MSYS2 MinGW64 terminal:
@@ -127,18 +157,19 @@ rustup default stable-x86_64-pc-windows-gnu
 
 ```rust
 use ni_number::{NI_F64, ni_number_digits, ni_number, bits_for_digits};
+use ni_number::backend::NiFloat;
 
 fn main() {
-    // Fast f64 constant (~15 digits)
+    // Fast f64 constant — no computation, pre-baked (~15 digits)
     println!("η_ν ≈ {:.15}", NI_F64);
 
-    // 100 decimal digits as String
+    // 100 decimal digits as String — result is cached after first call
     let s = ni_number_digits(100);
     println!("η_ν = {}", s);
 
-    // Arbitrary-precision rug::Float for further computation
+    // Arbitrary-precision value for further computation
     let eta = ni_number(bits_for_digits(500));
-    println!("{:.500}", eta);
+    println!("{}", eta.to_decimal_string(500));
 }
 ```
 
@@ -156,36 +187,44 @@ cargo run --example high_precision --release
 
 ## API
 
-| Function | Returns | Description |
+| Item | Returns | Description |
 |---|---|---|
-| `NI_F64` | `f64` | Constant at double precision |
-| `NI_F32` | `f32` | Constant at single precision |
-| `NI_50_DIGITS` | `&str` | First 50 decimal digits |
-| `ni_number(bits)` | `rug::Float` | Full arbitrary-precision value |
-| `ni_number_digits(n)` | `String` | Decimal string with `n` digits after the point |
-| `ni_term(n, bits)` | `rug::Float` | Single series term at index `n` |
+| `NI_F64` | `f64` | Pre-computed constant at double precision |
+| `NI_F32` | `f32` | Pre-computed constant at single precision |
+| `NI_50_DIGITS` | `&str` | First 50 decimal digits, static string |
+| `ni_number(bits)` | backend float | Full arbitrary-precision value, cached |
+| `ni_number_digits(n)` | `String` | Decimal string with `n` digits after the point, cached |
+| `ni_series(bits)` | `NiSeries` | Lazy iterator over series terms |
 | `bits_for_digits(n)` | `u32` | Bit precision needed for `n` decimal digits |
+| `clear_cache()` | `()` | Free cached values from memory |
 
 ---
 
 ## Performance
 
-The series converges in fewer than 10 iterations for any practical precision level — viable even on low-end hardware:
+The series converges in fewer than 10 iterations for any practical precision level — viable even on low-end hardware.
+Results are cached after the first call — subsequent calls at the same precision are instant.
 
-| Digits | Time (release build) |
+| Digits | Time (release build, dashu) |
 |---|---|
 | 100 | ~1 ms |
-| 1 000 | ~2 ms |
-| 5 000 | ~22 ms |
-| 10 000 | ~64 ms |
+| 1 000 | ~3 ms |
+| 5 000 | ~25 ms |
+| 10 000 | ~70 ms |
 
 ---
 
 ## Testing
 
 ```bash
+# Default backend (dashu)
 cargo test
-cargo test --release
+
+# With rug backend
+cargo test --no-default-features --features backend-rug
+
+# With f64 backend
+cargo test --no-default-features --features backend-f64
 ```
 
 ---

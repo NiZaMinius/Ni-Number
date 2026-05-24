@@ -1,9 +1,9 @@
 [package]
 name = "ni-number"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["NiZaMinius"]
-description = "High-precision computation of the Ni constant (η_ν) — quantum energy scattering constant"
+description = "High-precision computation of the Ni constant (η_ν) — quantum energy scattering constant. Supports multiple backends: pure-Rust (default) and GNU MPFR via rug."
 license = "MIT"
 repository = "https://github.com/NiZaMinius/Ni-Number"
 homepage = "https://github.com/NiZaMinius/Ni-Number"
@@ -11,17 +11,33 @@ documentation = "https://docs.rs/ni-number"
 keywords = ["mathematics", "constant", "arbitrary-precision", "physics", "quantum"]
 categories = ["mathematics", "science"]
 readme = "README.md"
-exclude = ["benches/", ".github/"]
+exclude = [".github/", "*.png", "*.gif"]
 
 [lib]
 name = "ni_number"
 path = "src/lib.rs"
 
+# ─── Feature flags ────────────────────────────────────────────────────────────
+[features]
+# Default: pure-Rust backend, works everywhere, no system dependencies
+default = ["backend-dashu"]
+
+# Pure-Rust arbitrary-precision backend (dashu)
+backend-dashu = ["dep:dashu"]
+
+# GNU MPFR backend via rug — maximum performance, requires MSYS2 on Windows
+backend-rug = ["dep:rug"]
+
+# Native f64 backend — zero deps, ~15 digits, for embedded / WASM
+backend-f64 = []
+# ─── Dependencies ─────────────────────────────────────────────────────────────
 [dependencies]
-rug = { version = "1.24", features = ["float"] }
+dashu = { version = "0.4", optional = true }
+rug  = { version = "1.24", features = ["float"], optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
+serial_test = "3.0"
 
 [[example]]
 name = "basic"

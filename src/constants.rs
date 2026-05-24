@@ -14,28 +14,44 @@ pub const NI_F32: f32 = 1.8893767_f32;
 /// Can be used for quick validation or display purposes.
 pub const NI_50_DIGITS: &str = "1.88937666040491913115597775087642096081019761538215";
 
-/// Format a [`rug::Float`] to exactly `decimal_digits` digits after the decimal point.
-///
-/// Returns a `String` like `"1.889376506201356..."`.
-pub fn format_digits(value: &rug::Float, decimal_digits: u32) -> String {
-    // rug's to_string_radix gives us precise control
-    // We use base 10, and request enough significant figures
-    let sig_figs = decimal_digits + 2; // +2 for the integer part digits
-    value.to_string_radix_round(10, Some(sig_figs as usize), rug::float::Round::Nearest)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::compute;
+    use serial_test::serial;
 
     #[test]
+    #[serial]
     fn test_ni_f64_value() {
         // Sanity-check against independently computed value
         assert!((NI_F64 - 1.8893767).abs() < 1e-7);
     }
 
     #[test]
+    #[serial]
     fn test_ni_50_digits_prefix() {
         assert!(NI_50_DIGITS.starts_with("1.889376660"));
+    }
+
+    #[cfg(feature = "backend-dashu")]
+    #[test]
+    #[serial]
+    fn verify_50_digits_exact() {
+        use crate::backend::NiFloat;
+        use crate::backend::dashu::DashuBackend;
+
+        // We calculate with a reserve (100 digits = ~396 bits) to avoid rounding error at the end
+        let bits = compute::digits_to_bits(100);
+        let val = compute::compute::<DashuBackend>(bits);
+
+        // We format it to exactly 50 characters.
+        let computed_str = val.to_decimal_string(50);
+
+        // We compare the calculated value with the hardcoded one
+        assert_eq!(
+            computed_str, NI_50_DIGITS,
+            "\nEXPECTED: {}\nCOMPUTED: {}",
+            NI_50_DIGITS, computed_str
+        );
     }
 }

@@ -1,40 +1,26 @@
 //! Basic usage example for the `ni-number` crate.
 //!
 //! Run with: `cargo run --example basic`
-
-use ni_number::{NI_F64, ni_number_digits, ni_term, bits_for_digits};
-
+use ni_number::{NI_F64, NI_50_DIGITS, ni_number_digits, ni_series};
+use ni_number::backend::NiFloat;
 fn main() {
     println!("══════════════════════════════════════════════");
-    println!("  Ni Constant (η_ν) — ni-number crate demo");
+    println!("  Ni Constant (η_ν) — Basic Ni Constant Usage");
     println!("══════════════════════════════════════════════\n");
 
-    // 1. Quick f64 constant
-    println!("► f64 constant (fast, ~15 digits):");
-    println!("  η_ν ≈ {:.15}\n", NI_F64);
+    // 1. Fast f64 constants (without calculations)
+    println!("Fast f64:\n{:.15}\n", NI_F64);
 
-    // 2. 50 decimal digits
-    println!("► 50 decimal digits:");
-    let d50 = ni_number_digits(50);
-    println!("  η_ν = {}\n", d50);
+    // 2. String constant 50 characters
+    println!("Static 50 digits:\n{}\n", NI_50_DIGITS);
 
-    // 3. 100 decimal digits
-    println!("► 100 decimal digits:");
-    let d100 = ni_number_digits(100);
-    println!("  η_ν = {}\n", d100);
+    // 3. On-the-fly calculation (result is cached)
+    let custom_digits = ni_number_digits(150);
+    println!("Computed 150 digits:\n{}\n", custom_digits);
 
-    // 4. Show individual terms of the series
-    println!("► Individual series terms  πⁿ / (n! · 2^(n²)):");
-    let bits = bits_for_digits(30);
-    for n in 1..=10 {
-        let term = ni_term(n, bits);
-        println!("  term({:2}) = {:.20e}", n, term);
-    }
-
-    println!("\n► Convergence check: running sum");
-    let mut sum = rug::Float::with_val(bits, 0.0);
-    for n in 1..=15 {
-        sum += ni_term(n, bits);
-        println!("  after n={:2}: {:.15}", n, sum);
+    // 4. Viewing the convergence of a series (first 5 steps)
+    println!("Series convergence (first 5 steps):");
+    for step in ni_series(128).take(5) {
+        println!("  n = {}: {}", step.n, step.sum.to_f64());
     }
 }
